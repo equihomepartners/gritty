@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRITPAD - Transform Ideas into Reality</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home" class="screen">
+        <nav class="navbar">
+            <div class="logo">
+                <i class="fas fa-brain"></i> GRITPAD
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#about">About</a>
+                <button class="login-btn">Login</button>
+            </div>
+        </nav>
+
+        <div class="hero-section">
+            <div class="hero-content">
+                <h1>Transform Ideas into Reality</h1>
+                <p class="subtitle">A structured notepad for builders and doers. Not just for jotting ideas, but for refining, validating, and tracking progress.</p>
+                <div class="cta-container">
+                    <button id="newIdeaBtn" class="primary-btn pulse">
+                        <i class="fas fa-plus"></i> Start Your First Idea
+                    </button>
+                    <p class="cta-subtext">Join 10,000+ innovators building the future</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <i class="fas fa-pen-to-square"></i>
+                <h3>Quick Capture</h3>
+                <p>Start typing or speak freely with a clean, minimal interface</p>
+                <div class="feature-badge">AI-Powered</div>
+            </div>
+            <div class="feature-card highlight">
+                <i class="fas fa-wand-magic-sparkles"></i>
+                <h3>Smart Structure</h3>
+                <p>AI-powered templates and suggestions guide your thinking</p>
+                <div class="feature-badge">Popular</div>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-line"></i>
+                <h3>Progress Tracking</h3>
+                <p>Monitor validation and execution stages with real metrics</p>
+                <div class="feature-badge">Analytics</div>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-share-nodes"></i>
+                <h3>Collaboration</h3>
+                <p>Share and refine ideas together in real-time</p>
+                <div class="feature-badge">Team</div>
+            </div>
+        </div>
+
+        <div class="ideas-section">
+            <div class="section-header">
+                <h2>Your Ideas</h2>
+                <div class="ideas-filter">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search ideas...">
+                    </div>
+                    <div class="view-options">
+                        <button class="active"><i class="fas fa-grid-2"></i></button>
+                        <button><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div id="ideaList"></div>
+        </div>
+    </div>
+
+    <!-- Notepad Screen -->
+    <div id="notepad" class="screen hidden">
+        <div class="notepad-container">
+            <div class="notepad-header">
+                <div class="title-group">
+                    <input type="text" id="ideaTitle" placeholder="Give your idea a name..." class="title-input">
+                    <button class="voice-input-btn" title="Use voice input">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <div class="idea-meta">Last edited: Just now</div>
+                </div>
+                <div class="action-buttons">
+                    <button id="trackProgressBtn" class="action-btn">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Track Progress</span>
+                    </button>
+                    <button id="shareBtn" class="action-btn">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Share</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-layout">
+                <div class="editor-sidebar">
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">SMART SECTIONS</h3>
+                        <div class="template-list">
+                            <button class="template-card" data-template="problem">
+                                <div class="template-icon">
+                                    <i class="fas fa-lightbulb"></i>
+                                </div>
+                                <div class="template-content">
+                                    <h4>Problem Discovery</h4>
+                                    <p>Define the problem space</p>
+                                </div>
+                            </button>
+                            <button class="template-card" data-template="persona">
+                                <div class="template-icon">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="template-content">
+                                    <h4>User Persona</h4>
+                                    <p>Describe your target user</p>
+                                </div>
+                            </button>
+                            <button class="template-card" data-template="validation">
+                                <div class="template-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="template-content">
+                                    <h4>Validation Plan</h4>
+                                    <p>Test your assumptions</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">AI SUGGESTIONS</h3>
+                        <div class="suggestion-list">
+                            <div class="suggestion-card">
+                                <div class="suggestion-icon">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <p>Try describing who is affected by this problem</p>
+                            </div>
+                            <div class="suggestion-card">
+                                <div class="suggestion-icon">
+                                    <i class="fas fa-magic"></i>
+                                </div>
+                                <p>Consider adding market size estimates</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="editor-main">
+                    <div class="editor-toolbar">
+                        <div class="toolbar-left">
+                            <button class="tool-btn active" title="Write Mode">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="tool-btn" title="Structure Mode">
+                                <i class="fas fa-list-check"></i>
+                            </button>
+                        </div>
+                        <div class="toolbar-center">
+                            <span class="typing-status">Writing...</span>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="tool-btn voice-input-btn" title="Voice Input">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="tool-btn" title="AI Assistant">
+                                <i class="fas fa-robot"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="editor-content">
+                        <div class="editor-wrapper">
+                            <textarea id="notepadContent" placeholder="Start typing your idea freely or click the microphone to use voice input...
+
+Use '/' commands for smart templates:
+/problem - Define the problem and affected users
+/persona - Create detailed user personas
+/validation - Plan your validation strategy
+
+The AI will automatically suggest structure as you type."></textarea>
+                        </div>
+                        <div class="voice-input-overlay hidden">
+                            <div class="voice-input-indicator">
+                                <i class="fas fa-microphone-lines"></i>
+                                <span>Listening...</span>
+                                <div class="voice-waves">
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                    <div class="wave"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grit Tracker Screen -->
+    <div id="tracker" class="screen hidden">
+        <h2><i class="fas fa-chart-radar"></i> Grit Tracker</h2>
+        <div class="tracker-container">
+            <div class="chart-section">
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div class="ai-score">
+                <h3>AI Score</h3>
+                <div id="aiScoreValue">150</div>
+                <p class="score-description">Based on problem clarity, validation depth, and execution readiness</p>
+            </div>
+        </div>
+        <div class="wins-section">
+            <h3><i class="fas fa-trophy"></i> Small Wins</h3>
+            <div class="add-win">
+                <input type="text" id="newWin" placeholder="What progress did you make today?">
+                <button id="addWinBtn">
+                    <i class="fas fa-plus"></i> Add Win
+                </button>
+            </div>
+            <ul id="winsList"></ul>
+        </div>
+        <button id="backToNotepadBtn" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Notepad
+        </button>
+    </div>
+
+    <!-- Share Screen -->
+    <div id="share" class="screen hidden">
+        <h2><i class="fas fa-share-nodes"></i> Share & Export</h2>
+        <div class="share-options">
+            <button id="exportBtn">
+                <i class="fas fa-file-export"></i> Export to Text
+            </button>
+            <button id="copyLinkBtn">
+                <i class="fas fa-link"></i> Copy Share Link
+            </button>
+            <div class="invite-section">
+                <input type="email" id="inviteEmail" placeholder="colleague@example.com">
+                <button id="sendInviteBtn">
+                    <i class="fas fa-paper-plane"></i> Send
+                </button>
+            </div>
+        </div>
+        <button id="backToNotepadFromShare" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Notepad
+        </button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
