@@ -33,77 +33,178 @@ function showScreen(screenId) {
     });
 }
 
-// Home Screen
-document.getElementById('newIdeaBtn').addEventListener('click', () => {
-    currentIdea = {
-        title: '',
-        content: '',
-        wins: [],
-        progress: {
-            problemDepth: 50,
-            validation: 50,
-            execution: 50
-        },
-        lastEdited: new Date()
-    };
-    document.getElementById('ideaTitle').value = '';
-    document.getElementById('notepadContent').value = '';
-    updateLastEdited();
-    showScreen('notepad');
+// Initialize event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Home Screen
+    document.getElementById('newIdeaBtn').addEventListener('click', () => {
+        currentIdea = {
+            title: '',
+            content: '',
+            wins: [],
+            progress: {
+                problemDepth: 50,
+                validation: 50,
+                execution: 50
+            },
+            lastEdited: new Date()
+        };
+        document.getElementById('ideaTitle').value = '';
+        document.getElementById('notepadContent').value = '';
+        updateLastEdited();
+        showScreen('notepad');
+        
+        // Focus the textarea after transition
+        setTimeout(() => {
+            const textarea = document.getElementById('notepadContent');
+            textarea.focus();
+        }, 300);
+    });
+
+    // Notepad Screen
+    const ideaTitle = document.getElementById('ideaTitle');
+    const notepadContent = document.getElementById('notepadContent');
+    const trackProgressBtn = document.getElementById('trackProgressBtn');
+    const shareBtn = document.getElementById('shareBtn');
+
+    // Ensure textarea is enabled and focusable
+    notepadContent.removeAttribute('disabled');
+    notepadContent.setAttribute('tabindex', '0');
+
+    // Make editor content area clickable
+    document.querySelector('.editor-content').addEventListener('click', (e) => {
+        if (e.target.classList.contains('editor-content')) {
+            notepadContent.focus();
+        }
+    });
+
+    // Make editor wrapper clickable
+    document.querySelector('.editor-wrapper').addEventListener('click', (e) => {
+        if (e.target.classList.contains('editor-wrapper')) {
+            notepadContent.focus();
+        }
+    });
+
+    ideaTitle.addEventListener('input', (e) => {
+        currentIdea.title = e.target.value;
+        updateLastEdited();
+    });
+
+    notepadContent.addEventListener('input', (e) => {
+        currentIdea.content = e.target.value;
+        handleSlashCommands(e.target);
+        updateLastEdited();
+        updateProgress();
+    });
+
+    // Update voice input overlay handling
+    const voiceInputOverlay = document.querySelector('.voice-input-overlay');
+    if (voiceInputOverlay) {
+        voiceInputOverlay.classList.remove('hidden');
+        voiceInputOverlay.classList.add('show');
+        voiceInputOverlay.style.display = 'none';
+    }
+
+    trackProgressBtn.addEventListener('click', () => {
+        updateRadarChart();
+        showScreen('tracker');
+    });
+
+    shareBtn.addEventListener('click', () => {
+        showScreen('share');
+    });
+
+    // Template buttons
+    document.querySelectorAll('.template-card').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const template = btn.dataset.template;
+            insertTemplate(template);
+        });
+    });
+
+    // Suggestion cards
+    document.querySelectorAll('.suggestion-card').forEach(card => {
+        card.addEventListener('click', () => {
+            const suggestion = card.querySelector('p').textContent;
+            insertSuggestion(suggestion);
+        });
+    });
+
+    // Voice input buttons
+    document.querySelectorAll('.voice-input-btn').forEach(btn => {
+        btn.addEventListener('click', toggleVoiceInput);
+    });
+
+    // Back buttons
+    document.getElementById('backToNotepadBtn').addEventListener('click', () => {
+        showScreen('notepad');
+    });
+
+    document.getElementById('backToNotepadFromShare').addEventListener('click', () => {
+        showScreen('notepad');
+    });
+
+    // Share screen buttons
+    document.getElementById('exportBtn').addEventListener('click', exportIdea);
+    document.getElementById('copyLinkBtn').addEventListener('click', copyShareLink);
+    document.getElementById('sendInviteBtn').addEventListener('click', sendInvite);
+
+    // Wins section
+    document.getElementById('addWinBtn').addEventListener('click', addWin);
+
+    // Write/Structure mode toggle
+    const writeBtn = document.querySelector('.tool-btn[title="Write Mode"]');
+    const structureBtn = document.querySelector('.tool-btn[title="Structure Mode"]');
+    
+    writeBtn.addEventListener('click', () => {
+        writeBtn.classList.add('active');
+        structureBtn.classList.remove('active');
+        document.querySelector('.editor-content').classList.remove('structure-mode');
+    });
+    
+    structureBtn.addEventListener('click', () => {
+        structureBtn.classList.add('active');
+        writeBtn.classList.remove('active');
+        document.querySelector('.editor-content').classList.add('structure-mode');
+    });
+
+    // AI Assistant button
+    const aiAssistantBtn = document.querySelector('.tool-btn[title="AI Assistant"]');
+    aiAssistantBtn.addEventListener('click', () => {
+        const suggestions = [
+            "Consider adding more details about the target market",
+            "What specific metrics will you track?",
+            "How will you validate this with users?",
+            "What's the timeline for implementation?"
+        ];
+        const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+        insertSuggestion(randomSuggestion);
+        showToast('AI Suggestion Added! 🤖');
+    });
+
+    // View options toggle
+    const gridViewBtn = document.querySelector('.view-options button:first-child');
+    const listViewBtn = document.querySelector('.view-options button:last-child');
+    const ideaList = document.getElementById('ideaList');
+    
+    gridViewBtn.addEventListener('click', () => {
+        gridViewBtn.classList.add('active');
+        listViewBtn.classList.remove('active');
+        ideaList.classList.remove('list-view');
+        ideaList.classList.add('idea-grid');
+    });
+    
+    listViewBtn.addEventListener('click', () => {
+        listViewBtn.classList.add('active');
+        gridViewBtn.classList.remove('active');
+        ideaList.classList.remove('idea-grid');
+        ideaList.classList.add('list-view');
+    });
 });
 
-function updateIdeaList() {
-    const ideaList = document.getElementById('ideaList');
-    ideaList.innerHTML = '';
-    ideas.forEach((idea, index) => {
-        const card = document.createElement('div');
-        card.className = 'idea-card';
-        const progress = Math.round((idea.progress.problemDepth + idea.progress.validation + idea.progress.execution) / 3);
-        card.innerHTML = `
-            <h3>${idea.title || 'Untitled Idea'}</h3>
-            <p class="idea-meta">Last edited: ${formatDate(idea.lastEdited)}</p>
-            <div class="progress-bar">
-                <div class="progress" style="width: ${progress}%"></div>
-            </div>
-            <p class="progress-text">Progress: ${progress}%</p>
-        `;
-        card.addEventListener('click', () => {
-            currentIdea = {...idea};
-            document.getElementById('ideaTitle').value = idea.title;
-            document.getElementById('notepadContent').value = idea.content;
-            updateLastEdited();
-            showScreen('notepad');
-        });
-        ideaList.appendChild(card);
-    });
-}
-
-// Notepad Screen
+// Helper functions
 function updateLastEdited() {
     currentIdea.lastEdited = new Date();
     document.querySelector('.idea-meta').textContent = `Last edited: ${formatDate(currentIdea.lastEdited)}`;
-}
-
-document.getElementById('ideaTitle').addEventListener('input', (e) => {
-    currentIdea.title = e.target.value;
-    updateLastEdited();
-});
-
-document.getElementById('notepadContent').addEventListener('input', (e) => {
-    currentIdea.content = e.target.value;
-    handleSlashCommands(e.target);
-    updateLastEdited();
-    
-    // Auto-update progress based on content
-    const content = e.target.value.toLowerCase();
-    currentIdea.progress.problemDepth = calculateProgress(content, ['problem', 'challenge', 'issue', 'need', 'pain']);
-    currentIdea.progress.validation = calculateProgress(content, ['validate', 'test', 'measure', 'metric', 'result']);
-    currentIdea.progress.execution = calculateProgress(content, ['solution', 'implement', 'build', 'create', 'launch']);
-});
-
-function calculateProgress(content, keywords) {
-    return Math.min(100, keywords.reduce((acc, keyword) => 
-        acc + (content.includes(keyword) ? 20 : 0), 0));
 }
 
 function handleSlashCommands(textarea) {
@@ -135,40 +236,79 @@ function handleSlashCommands(textarea) {
                              content.substring(cursorPosition);
             textarea.value = newContent;
             currentIdea.content = newContent;
-            
-            // Animate the suggestions
-            const suggestions = document.getElementById('suggestions');
-            suggestions.style.transform = 'translateY(-10px)';
-            suggestions.style.opacity = '0';
-            setTimeout(() => {
-                suggestions.textContent = '✨ Great! Keep building on your idea';
-                suggestions.style.transform = 'translateY(0)';
-                suggestions.style.opacity = '1';
-            }, 300);
+            updateProgress();
         }
     }
 }
 
-document.getElementById('trackProgressBtn').addEventListener('click', () => {
-    updateRadarChart();
-    showScreen('tracker');
-});
+function insertTemplate(template) {
+    const textarea = document.getElementById('notepadContent');
+    const cursorPosition = textarea.selectionStart;
+    const content = textarea.value;
+    let templateText = '';
 
-document.getElementById('shareBtn').addEventListener('click', () => {
-    showScreen('share');
-});
+    switch (template) {
+        case 'problem':
+            templateText = '\n🎯 Problem Discovery:\n• What\'s the problem?\n• Who\'s affected?\n• Why does it matter?\n\n';
+            break;
+        case 'persona':
+            templateText = '\n👤 Persona:\n• Who are they?\n• What do they need?\n• What are their pain points?\n\n';
+            break;
+        case 'validation':
+            templateText = '\n✅ Validation Plan:\n• How will you test this?\n• What metrics matter?\n• Expected results?\n\n';
+            break;
+    }
 
-// Grit Tracker Screen
-let radarChart;
+    const newContent = content.substring(0, cursorPosition) + templateText + content.substring(cursorPosition);
+    textarea.value = newContent;
+    currentIdea.content = newContent;
+    updateProgress();
+    textarea.focus();
+}
+
+function insertSuggestion(suggestion) {
+    const textarea = document.getElementById('notepadContent');
+    const cursorPosition = textarea.selectionStart;
+    const content = textarea.value;
+    const newContent = content.substring(0, cursorPosition) + '\n💡 ' + suggestion + '\n' + content.substring(cursorPosition);
+    textarea.value = newContent;
+    currentIdea.content = newContent;
+    updateProgress();
+    textarea.focus();
+}
+
+function updateProgress() {
+    const content = document.getElementById('notepadContent').value.toLowerCase();
+    
+    currentIdea.progress.problemDepth = calculateProgress(content, [
+        'problem', 'challenge', 'issue', 'need', 'pain',
+        'market', 'customer', 'user', 'demand'
+    ]);
+    
+    currentIdea.progress.validation = calculateProgress(content, [
+        'validate', 'test', 'measure', 'metric', 'result',
+        'experiment', 'hypothesis', 'data', 'feedback'
+    ]);
+    
+    currentIdea.progress.execution = calculateProgress(content, [
+        'solution', 'implement', 'build', 'create', 'launch',
+        'timeline', 'milestone', 'resource', 'plan'
+    ]);
+}
+
+function calculateProgress(content, keywords) {
+    return Math.min(100, keywords.reduce((acc, keyword) => 
+        acc + (content.includes(keyword) ? 20 : 0), 0));
+}
 
 function updateRadarChart() {
     const ctx = document.getElementById('radarChart').getContext('2d');
     
-    if (radarChart) {
-        radarChart.destroy();
+    if (window.radarChart) {
+        window.radarChart.destroy();
     }
 
-    radarChart = new Chart(ctx, {
+    window.radarChart = new Chart(ctx, {
         type: 'radar',
         data: {
             labels: ['Problem Depth', 'Validation', 'Execution'],
@@ -179,12 +319,12 @@ function updateRadarChart() {
                     currentIdea.progress.validation,
                     currentIdea.progress.execution
                 ],
-                backgroundColor: 'rgba(79, 70, 229, 0.2)',
-                borderColor: 'rgba(79, 70, 229, 1)',
-                pointBackgroundColor: 'rgba(79, 70, 229, 1)',
+                backgroundColor: 'rgba(0, 229, 190, 0.2)',
+                borderColor: 'rgba(0, 229, 190, 1)',
+                pointBackgroundColor: 'rgba(0, 229, 190, 1)',
                 pointBorderColor: '#fff',
                 pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: 'rgba(79, 70, 229, 1)'
+                pointHoverBorderColor: 'rgba(0, 229, 190, 1)'
             }]
         },
         options: {
@@ -193,15 +333,17 @@ function updateRadarChart() {
                     min: 0,
                     max: 100,
                     ticks: {
-                        stepSize: 20
+                        stepSize: 20,
+                        color: 'rgba(255, 255, 255, 0.7)'
                     },
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.1)'
+                        color: 'rgba(255, 255, 255, 0.1)'
                     },
                     angleLines: {
-                        color: 'rgba(0, 0, 0, 0.1)'
+                        color: 'rgba(255, 255, 255, 0.1)'
                     },
                     pointLabels: {
+                        color: '#FFFFFF',
                         font: {
                             size: 14,
                             weight: '600'
@@ -217,13 +359,13 @@ function updateRadarChart() {
         }
     });
 
-    // Update AI Score with animation
-    const targetScore = Math.round((currentIdea.progress.problemDepth + 
-                                  currentIdea.progress.validation + 
-                                  currentIdea.progress.execution) / 3);
-    const scoreElement = document.getElementById('aiScoreValue');
-    const currentScore = parseInt(scoreElement.textContent);
-    animateValue(scoreElement, currentScore, targetScore, 1000);
+    const aiScore = Math.round(
+        (currentIdea.progress.problemDepth + 
+         currentIdea.progress.validation + 
+         currentIdea.progress.execution) / 3
+    );
+    
+    animateValue(document.getElementById('aiScoreValue'), 0, aiScore, 1000);
 }
 
 function animateValue(element, start, end, duration) {
@@ -244,7 +386,7 @@ function animateValue(element, start, end, duration) {
     animate();
 }
 
-document.getElementById('addWinBtn').addEventListener('click', () => {
+function addWin() {
     const newWin = document.getElementById('newWin').value.trim();
     if (newWin) {
         currentIdea.wins.push({
@@ -253,63 +395,47 @@ document.getElementById('addWinBtn').addEventListener('click', () => {
         });
         updateWinsList();
         document.getElementById('newWin').value = '';
-        
-        // Celebrate the win
-        celebrateWin();
+        showToast('Win added! 🎉');
     }
-});
-
-function celebrateWin() {
-    const celebration = document.createElement('div');
-    celebration.className = 'celebration';
-    celebration.innerHTML = '🎉';
-    document.body.appendChild(celebration);
-    
-    setTimeout(() => celebration.remove(), 1000);
 }
 
 function updateWinsList() {
     const winsList = document.getElementById('winsList');
-    winsList.innerHTML = '';
-    currentIdea.wins.forEach(win => {
-        const li = document.createElement('li');
-        li.innerHTML = `
+    winsList.innerHTML = currentIdea.wins.map(win => `
+        <li>
             <div class="win-text">${win.text}</div>
             <div class="win-date">${formatDate(win.date)}</div>
-        `;
-        winsList.appendChild(li);
-    });
+        </li>
+    `).join('');
 }
 
-// Share Screen
-document.getElementById('exportBtn').addEventListener('click', () => {
-    const blob = new Blob([currentIdea.content], { type: 'text/plain' });
+function exportIdea() {
+    const blob = new Blob([
+        `${currentIdea.title}\n\n${currentIdea.content}`,
+        { type: 'text/plain' }
+    ]);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `${currentIdea.title || 'untitled'}.txt`;
     a.click();
     window.URL.revokeObjectURL(url);
-    
-    // Show success message
-    showToast('File exported successfully! 📄');
-});
+    showToast('Idea exported successfully! 📄');
+}
 
-document.getElementById('copyLinkBtn').addEventListener('click', () => {
-    // In a real app, this would generate a unique sharing link
-    const demoLink = 'https://gritpad.app/share/' + Math.random().toString(36).substring(7);
-    navigator.clipboard.writeText(demoLink);
+function copyShareLink() {
+    const shareLink = `https://gritpad.app/share/${Math.random().toString(36).substring(7)}`;
+    navigator.clipboard.writeText(shareLink);
     showToast('Share link copied! 🔗');
-});
+}
 
-document.getElementById('sendInviteBtn').addEventListener('click', () => {
-    const email = document.getElementById('inviteEmail').value;
+function sendInvite() {
+    const email = document.getElementById('inviteEmail').value.trim();
     if (email) {
-        console.log('Invite sent to:', email);
         showToast(`Invite sent to ${email} 📧`);
         document.getElementById('inviteEmail').value = '';
     }
-});
+}
 
 function showToast(message) {
     const toast = document.createElement('div');
@@ -336,18 +462,9 @@ function formatDate(date) {
     return new Date(date).toLocaleDateString();
 }
 
-// Navigation
-document.getElementById('backToNotepadBtn').addEventListener('click', () => {
-    showScreen('notepad');
-});
-
-document.getElementById('backToNotepadFromShare').addEventListener('click', () => {
-    showScreen('notepad');
-});
-
-// Voice Input Functionality
-let isRecording = false;
+// Voice Input Setup
 let recognition;
+let isRecording = false;
 
 function setupVoiceInput() {
     if ('webkitSpeechRecognition' in window) {
@@ -372,15 +489,11 @@ function setupVoiceInput() {
         };
 
         recognition.onresult = (event) => {
-            let interimTranscript = '';
             let finalTranscript = '';
-
             for (let i = event.resultIndex; i < event.results.length; i++) {
                 const transcript = event.results[i][0].transcript;
                 if (event.results[i].isFinal) {
                     finalTranscript += transcript;
-                } else {
-                    interimTranscript += transcript;
                 }
             }
 
@@ -392,11 +505,8 @@ function setupVoiceInput() {
                                  finalTranscript + ' ' +
                                  content.substring(cursorPosition);
                 textarea.value = newContent;
-                textarea.selectionStart = cursorPosition + finalTranscript.length + 1;
-                textarea.selectionEnd = textarea.selectionStart;
-                
-                // Trigger content analysis
-                handleContentChange(textarea);
+                currentIdea.content = newContent;
+                updateProgress();
             }
         };
 
@@ -431,70 +541,6 @@ function stopVoiceInput() {
     }
 }
 
-// Add voice input button event listeners
-document.querySelectorAll('.voice-input-btn').forEach(btn => {
-    btn.addEventListener('click', toggleVoiceInput);
-});
-
-// Enhanced content analysis
-function handleContentChange(textarea) {
-    const content = textarea.value.toLowerCase();
-    
-    // Update progress based on content
-    currentIdea.progress.problemDepth = calculateProgress(content, [
-        'problem', 'challenge', 'issue', 'need', 'pain',
-        'market', 'customer', 'user', 'demand'
-    ]);
-    
-    currentIdea.progress.validation = calculateProgress(content, [
-        'validate', 'test', 'measure', 'metric', 'result',
-        'experiment', 'hypothesis', 'data', 'feedback'
-    ]);
-    
-    currentIdea.progress.execution = calculateProgress(content, [
-        'solution', 'implement', 'build', 'create', 'launch',
-        'timeline', 'milestone', 'resource', 'plan'
-    ]);
-
-    // Update last edited
-    updateLastEdited();
-
-    // Generate AI suggestions based on content
-    generateAISuggestions(content);
-}
-
-function generateAISuggestions(content) {
-    const suggestionList = document.querySelector('.suggestion-list');
-    const suggestions = [];
-
-    // Simple rule-based suggestions
-    if (!content.includes('problem')) {
-        suggestions.push('Try describing the core problem you\'re solving');
-    }
-    if (!content.includes('market') && !content.includes('size')) {
-        suggestions.push('Consider adding market size estimates');
-    }
-    if (!content.includes('user') && !content.includes('customer')) {
-        suggestions.push('Who are your target users?');
-    }
-    if (!content.includes('competition') && !content.includes('competitor')) {
-        suggestions.push('Analyze your competition');
-    }
-    if (!content.includes('revenue') && !content.includes('monetization')) {
-        suggestions.push('How will this idea generate revenue?');
-    }
-
-    // Update suggestion UI
-    suggestionList.innerHTML = suggestions.slice(0, 3).map(suggestion => `
-        <div class="suggestion-item">
-            <i class="fas fa-magic"></i>
-            <span>${suggestion}</span>
-        </div>
-    `).join('');
-}
-
-// Initialize voice input setup
-setupVoiceInput();
-
 // Initialize
+setupVoiceInput();
 updateIdeaList(); 
